@@ -1,6 +1,15 @@
 import functools
 
-from flask import g, flash, redirect, render_template, request, session, url_for, Blueprint
+from flask import (
+    g,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+    Blueprint,
+)
 from passlib.hash import argon2
 from sqlalchemy.exc import IntegrityError
 
