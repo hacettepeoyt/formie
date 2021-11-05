@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form method="POST">
+{% for index, field in schema %}
+    <label>{{ field['name'] }}<br>
+    {% if field['type'] == 'text' %}
+        <input type="text" name="col{{ index }}" value="{{ field['default'] }}"/>
+    {% elif field['type'] == 'choice' %}
+        {% if field['single'] %}
+            {% for choice in field['choices'] %}
+                <input type="radio" name="col{{ index }}">{{ choice }}</input>
+            {% endfor %}
+        {% else %}
+            {% for choice in field['choices'] %}
+                <input type="checkbox" name="col{{ index }}">{{ choice }}</input>
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+    </label><br>
+{% endfor %}
+<input type="submit" value="Submit">
+</form>
+{% endblock %}

@@ -48,11 +48,12 @@ function make_schema() {
 			schema_field.default = field.children[2].lastChild.value;
 		} else {
 			schema_field.choices = [];
-			schema_field.unique = false;
+			schema_field.single = false;
 			schema_field.type = "choice";
-			if (field.children[1].selectedIndex === 1) schema_field.unique = true;
-			for (choice in field.children[2].children) {
-				schema_field.choices.push(choice.lastChild.value);
+			schema_field.default = 0;
+			if (field.children[1].selectedIndex === 1) schema_field.single = true;
+			for (choice of field.children[2].children) {
+				if (choice.tagName == 'INPUT' && choice.type == 'text') schema_field.choices.push(choice.value);
 			}
 		}
 		schema.push(schema_field);
