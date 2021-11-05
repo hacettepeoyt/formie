@@ -12,7 +12,7 @@ bp = Blueprint("forms", __name__, url_prefix="/forms")
 
 def decode_fields(data: str) -> List[Field]:
     fields: List[Field] = []
-    for elem in json.decode(data):
+    for elem in data:
         if "name" not in elem:
             raise ValueError("invalid format")
         if len(elem["name"]) > 256:
@@ -37,7 +37,7 @@ def decode_fields(data: str) -> List[Field]:
 
 def create_model(name: str, fields: List[Field]):
     cols = {"id": db.Column(db.Integer, primary_key=True)}
-    for i, field in fields:
+    for i, field in enumerate(fields):
         if isinstance(field, TextField):
             col = db.Column(db.Text, default=field.default)
         elif isinstance(field, ChoiceField):
@@ -49,16 +49,17 @@ def create_model(name: str, fields: List[Field]):
 @bp.route("/new", methods=("GET", "POST"))
 def new_form():
     if request.method == "POST":
-        schema = request.form["schema"]
+        schema = request.json
 
         error = None
         try:
             fields = decode_fields(schema)
-            form = db.session.add(
-                Form(schema=schema, created_at=datetime.datetime.now())
-            )
-            db.create_all(tables=(create_model(str(form.id), fields),))
-        except Exception:
+            form = Form(schema=json.dumps(schema), created_at=datetime.datetime.now())
+            db.session.add(form)
+            db.session.commit()
+            create_model(str(form.id), fields).__table__.create(db.engine)
+        except Exception as e:
+            raise e
             abort(401)
         db.session.commit()
 
@@ -79,7 +80,7 @@ def form(form_id: int):
         db.session.add(model(**request.form))
         db.session.commit()
 
-    return render_template("forms/form.html", schema=json.decode(form.schema))
+    return render_template("forms/form.html", schema=json.loads(form.schema))
 
 
 @bp.route("/<int:form_id>/view")
@@ -92,5 +93,5 @@ def view_form(form_id: int):
     model = create_model(str(form.id), decode_fields(form.schema))
 
     return render_template(
-        "forms/view.html", schema=json.decode(form.schema), results=model.query.all()
+        "forms/view.html", schema=json.loads(form.schema), results=model.query.all()
     )

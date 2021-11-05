@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<script src="{{ url_for('static', filename='new_form.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+<button onclick="new_field()">New field</button>
+<div id="fields"></div>
+<button onclick="submit_form()">Create Form</button>
+{% endblock %}
