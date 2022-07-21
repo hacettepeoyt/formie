@@ -16,6 +16,9 @@ class Form(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     schema = db.Column(db.Text)
     created_at = db.Column(db.DateTime)
+    creator_id = db.Column(db.Integer, db.ForeignKey(User.id))
+
+    creator = db.relationship('User', foreign_keys='Form.creator_id')
 
 
 @dataclass

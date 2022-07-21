@@ -3,8 +3,9 @@ import json
 from dataclasses import dataclass
 from typing import List
 
-from flask import abort, render_template, request, Blueprint
+from flask import abort, g, render_template, request, Blueprint
 
+from formie import auth
 from formie.models import db, Field, ChoiceField, Form, TextField
 
 bp = Blueprint("forms", __name__, url_prefix="/forms")
@@ -56,6 +57,7 @@ def create_model(name: str, fields: List[Field]):
 
 
 @bp.route("/new", methods=("GET", "POST"))
+@auth.login_required
 def new_form():
     if request.method == "POST":
         schema = request.json
@@ -64,7 +66,7 @@ def new_form():
         try:
             schema_str = json.dumps(schema)  # TODO: fetch original instead
             fields = decode_fields(schema)
-            form = Form(schema=schema_str, created_at=datetime.datetime.now())
+            form = Form(schema=schema_str, created_at=datetime.datetime.now(), creator_id=g.user.id)
             db.session.add(form)
             db.session.commit()
             create_model(str(form.id), fields).__table__.create(db.engine)
