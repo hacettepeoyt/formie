@@ -1,0 +1,45 @@
+html, body {
+    background-color: #EEEEEE;
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+nav {
+    background-color: #111111;
+    color: white;
+    overflow: hidden;
+    display: inline-block;
+    width: 100%;
+    padding: 10px;
+    padding-top: 5px;
+}
+
+nav h1 {
+   margin: auto;
+   float: left;
+   display: block;
+   vertical-align: middle;
+   margin-top: auto;
+   margin-bottom: auto;
+}
+
+nav ul {
+    display: block;
+    list-style-type: none;
+    overflow: visible;
+    float: right;
+}
+
+nav li {
+    margin-right: 20px;
+    display: inline;
+    float: right;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    text-align: center;
+}
+
