@@ -11,5 +11,5 @@ python3 setup-db.py
 
 # Run with:
 source venv/bin/activate
-FLASK_APP=formie FLASK_ENV=development flask run
+FLASK_APP=formie FLASK_ENV=development SQLALCHEMY_DATABASE_URI="sqlite:///test.db" SECRET_KEY="fiesta" flask run
 ```
