@@ -1,11 +1,15 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% set ns = namespace(has_sliders = false) %}
 <form method="POST">
 {% for index, field in schema %}
     <label>{{ field['name'] }}<br>
     {% if field['type'] == 'text' %}
         <input type="text" name="col{{ index }}" value="{{ field['default'] }}"/>
+    {% elif field['type'] == 'number_slider' %}
+        {% set ns.has_sliders = true %}
+        <input id='slider{{ index }}' type="range" min="{{ field['min'] }}" max="{{ field['max'] }}" value="{{ field['default'] }}"/><input name="col{{ index }}" type="text" id='label{{ index }}' value="{{ field['default'] }}"/></input>
     {% elif field['type'] == 'choice' %}
         {% if field['single'] %}
             {% for choice in field['choices'] %}
@@ -21,4 +25,18 @@
 {% endfor %}
 <input type="submit" value="Submit">
 </form>
+{% if ns.has_sliders %}
+<script type="text/javascript">
+{% for index, field in s2 %}
+{% if field['type'] == 'number_slider' %}
+var slider{{ index }} = document.getElementById("slider{{ index }}");
+var label{{ index }} = document.getElementById("label{{ index }}");
+label{{ index }}.innerHTML = slider{{ index }}.value;
+slider{{ index }}.oninput = function() {
+label{{ index }}.value = this.value;
+};
+{% endif %}
+{% endfor %}
+</script>
+{% endif %}
 {% endblock %}

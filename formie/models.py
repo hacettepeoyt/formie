@@ -36,3 +36,9 @@ class ChoiceField(Field):
     single: bool
     default: int
     choices: List[str]  # max 64 if single is false
+
+@dataclass
+class NumberSliderField(Field):
+   default: int
+   min: int
+   max: int

@@ -6,7 +6,7 @@ from typing import List
 from flask import abort, g, redirect, render_template, request, url_for, Blueprint
 
 from formie import auth
-from formie.models import db, Field, ChoiceField, Form, TextField
+from formie.models import db, Field, ChoiceField, Form, TextField, NumberSliderField
 
 bp = Blueprint("forms", __name__, url_prefix="/forms")
 
@@ -33,6 +33,10 @@ def decode_fields(data: dict) -> List[Field]:
 
             fields.append(ChoiceField(**elem))
             elem["type"] = "choice"
+        elif elem["type"] == "number_slider":
+            del elem["type"]
+            fields.append(NumberSliderField(**elem))
+            elem["type"] = "number_slider"
         else:
             raise ValueError("invalid format")
     return fields
@@ -49,6 +53,8 @@ def create_model(name: str, fields: List[Field]):
         if isinstance(field, TextField):
             col = db.Column(db.Text, default=field.default)
         elif isinstance(field, ChoiceField):
+            col = db.Column(db.Integer, default=field.default)
+        elif isinstance(field, NumberSliderField):
             col = db.Column(db.Integer, default=field.default)
         cols[f"col{i}"] = col
     cls = type(name, (db.Model,), cols)
@@ -106,7 +112,7 @@ def form(form_id: int):
         db.session.commit()
         return redirect(url_for("forms.view_results", form_id=form_id))
 
-    return render_template("forms/form.html", schema=enumerate(schema))
+    return render_template("forms/form.html", schema=enumerate(schema), s2=enumerate(schema))
 
 
 @bp.route("/<int:form_id>/results")

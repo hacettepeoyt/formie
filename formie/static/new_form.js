@@ -10,6 +10,7 @@ function new_field() {
 		<option value="text">Text</option>
 		<option value="single_choice">Single Choice</option>
 		<option value="multi_choice">Multi Choice</option>
+		<option value="number_slider">Number slider</option>
 	</select>
 	<div id="extra"></div>
 	<button onclick="this.parentElement.remove()">Remove field</button>
@@ -27,7 +28,9 @@ function change_field(field, typ) {
 		extra.innerHTML = '<button onclick="add_choice(this.parentElement, true)">Add choice</button>';
 	} else if (typ === "multi_choice") {
 		extra.innerHTML = '<button onclick="add_choice(this.parentElement, false)">Add choice</button>';
-	}
+	} else if (typ === "number_slider") {
+      extra.innerHTML = '<label>min</label><input class="number_slider" type="text"/></input><label>max</label><input type="text"/></input><label>value</label><input type="text"></input>'
+   }
 }
 
 function add_choice(element, is_radio) {
@@ -43,7 +46,12 @@ function make_schema() {
 	for (field of fields_div.children) {
 		let schema_field = {};
 		schema_field.name = field.children[0].value;
-		if (field.children[1].selectedIndex === 0) {
+		if (field.children[2].children[1].className = "number_slider") {
+			schema_field.type = "number_slider";
+			schema_field.min = field.children[2].children[1].value;
+			schema_field.max = field.children[2].children[3].value;
+			schema_field.default = field.children[2].children[5].value;
+		} else if (field.children[1].selectedIndex === 0) {
 			schema_field.type = "text";
 			schema_field.default = field.children[2].lastChild.value;
 		} else {
