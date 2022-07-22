@@ -2,6 +2,12 @@
 
 {% block content %}
 <table>
+    <tr>
+        <th>ID</th>
+{% for question in schema %}
+        <th>{{ question["name"] }}</th>
+{% endfor %}
+    </tr>
 {% for result in results %}
     <tr>
     {% for field in result %}
