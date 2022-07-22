@@ -43,3 +43,44 @@ nav a {
     text-align: center;
 }
 
+.content {
+    padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.content ul {
+    padding: 0px;
+    border: 1px solid #CCCCCC;
+}
+
+.content li {
+    list-style-type: none;
+}
+
+.content li:nth-child(odd) {
+    background-color: white;
+}
+
+.content li:nth-child(even) {
+    background-color: #DDDDDD;
+}
+
+table {
+    width: 100%;
+    border: 1px solid #CCCCCC;
+    border-collapse: collapse;
+}
+
+td, th {
+  border: 1px solid #CCCCCC;
+  padding: 5px;
+}
+
+tr:nth-child(odd) {
+  background-color: white;
+}
+
+tr:nth-child(even) {
+  background-color: #DDDDDD;
+}
