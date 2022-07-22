@@ -3,7 +3,7 @@ import json
 from dataclasses import dataclass
 from typing import List
 
-from flask import abort, g, render_template, request, Blueprint
+from flask import abort, g, redirect, render_template, request, url_for, Blueprint
 
 from formie import auth
 from formie.models import db, Field, ChoiceField, Form, TextField
@@ -104,6 +104,7 @@ def form(form_id: int):
     if request.method == "POST":
         db.session.add(model(**request.form))
         db.session.commit()
+        return redirect(url_for("forms.view_results", form_id=form_id))
 
     return render_template("forms/form.html", schema=enumerate(schema))
 

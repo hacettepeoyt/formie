@@ -63,7 +63,8 @@ function make_schema() {
 
 function submit_form() {
 	let req = new XMLHttpRequest();
-	req.open('POST', document.location.href);	
+	req.open('POST', document.location.href, false);
 	req.setRequestHeader('Content-Type', 'application/json');
 	req.send(JSON.stringify(make_schema()));
+        window.location.href = '/';
 }
