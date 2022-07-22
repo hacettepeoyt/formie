@@ -38,7 +38,7 @@ class ChoiceField(Field):
     choices: List[str]  # max 64 if single is false
 
 @dataclass
-class NumberSliderField(Field):
+class RangeField(Field):
    default: int
    min: int
    max: int

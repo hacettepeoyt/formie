@@ -6,7 +6,7 @@ from typing import List
 from flask import abort, g, redirect, render_template, request, url_for, Blueprint
 
 from formie import auth
-from formie.models import db, Field, ChoiceField, Form, TextField, NumberSliderField
+from formie.models import db, Field, ChoiceField, Form, TextField, RangeField
 
 bp = Blueprint("forms", __name__, url_prefix="/forms")
 
@@ -33,10 +33,10 @@ def decode_fields(data: dict) -> List[Field]:
 
             fields.append(ChoiceField(**elem))
             elem["type"] = "choice"
-        elif elem["type"] == "number_slider":
+        elif elem["type"] == "range":
             del elem["type"]
-            fields.append(NumberSliderField(**elem))
-            elem["type"] = "number_slider"
+            fields.append(RangeField(**elem))
+            elem["type"] = "range"
         else:
             raise ValueError("invalid format")
     return fields
@@ -54,7 +54,7 @@ def create_model(name: str, fields: List[Field]):
             col = db.Column(db.Text, default=field.default)
         elif isinstance(field, ChoiceField):
             col = db.Column(db.Integer, default=field.default)
-        elif isinstance(field, NumberSliderField):
+        elif isinstance(field, RangeField):
             col = db.Column(db.Integer, default=field.default)
         cols[f"col{i}"] = col
     cls = type(name, (db.Model,), cols)
