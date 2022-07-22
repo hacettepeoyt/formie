@@ -4,7 +4,7 @@
 <ul>
 {% for form in forms %}
     <li>
-        <a href="{{form["id"]}}">{{ form["id"] }}</a> by {{ form["creator"] }}
+        <a href="{{form["id"]}}">{{ form["id"] }}</a> by {{ form["creator"] }} | <a href="{{ form["id"] }}/results">Results</a>
     </li>
 {% endfor %}
 </ul>
