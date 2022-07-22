@@ -1,6 +1,6 @@
 import os
 
-from flask import render_template, Flask
+from flask import redirect, render_template, url_for, Flask
 
 from formie import auth, forms, models
 
@@ -17,6 +17,6 @@ def create_app() -> Flask:
 
     @app.route("/")
     def index():
-        return render_template("index.html")
+        return redirect(url_for("forms.all_forms")) # render_template("index.html")
 
     return app

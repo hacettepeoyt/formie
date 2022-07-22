@@ -56,6 +56,19 @@ def create_model(name: str, fields: List[Field]):
     return cls
 
 
+@bp.route("/")
+def all_forms():
+    forms = []
+    for form in Form.query.all():
+        form_dict = {}
+        form_dict["id"] = form.id
+        form_dict["creator"] = "anon"
+        if form.creator:
+            form_dict["creator"] = form.creator.username
+        forms.append(form_dict)
+    return render_template("forms/forms.html", forms=forms)
+
+
 @bp.route("/new", methods=("GET", "POST"))
 @auth.login_required
 def new_form():
@@ -95,15 +108,21 @@ def form(form_id: int):
     return render_template("forms/form.html", schema=enumerate(schema))
 
 
-@bp.route("/<int:form_id>/view")
-def view_form(form_id: int):
+@bp.route("/<int:form_id>/results")
+def view_results(form_id: int):
     form = Form.query.filter_by(id=form_id).first()
     if form is None:
         abort(404)
 
-    # TODO: json getting deserialized twice here
-    model = create_model(str(form.id), decode_fields(form.schema))
+    schema = json.loads(form.schema)
+    model = create_model(str(form.id), decode_fields(schema))
+    results = []
+    for res in model.query.all():
+        cols = []
+        for col in model.__table__.columns.keys():
+            cols.append(getattr(res, col))
+        results.append(cols)
 
     return render_template(
-        "forms/view.html", schema=json.loads(form.schema), results=model.query.all()
+        "forms/results.html", schema=schema, results=results
     )

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<ul>
+{% for form in forms %}
+    <li>
+        <a href="{{form["id"]}}">{{ form["id"] }}</a> by {{ form["creator"] }}
+    </li>
+{% endfor %}
+</ul>
+{% endblock %}
