@@ -112,7 +112,7 @@ def form(form_id: int):
         db.session.commit()
         return redirect(url_for("forms.view_results", form_id=form_id))
 
-    return render_template("forms/form.html", schema=enumerate(schema), s2=enumerate(schema))
+    return render_template("forms/form.html", schema=enumerate(schema))
 
 
 @bp.route("/<int:form_id>/results")

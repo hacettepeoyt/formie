@@ -29,7 +29,7 @@ function change_field(field, typ) {
 	} else if (typ === "multi_choice") {
 		extra.innerHTML = '<button onclick="add_choice(this.parentElement, false)">Add choice</button>';
 	} else if (typ === "range") {
-      extra.innerHTML = '<label>min</label><input class="range" type="text"/></input><label>max</label><input type="text"/></input><label>value</label><input type="text"></input>'
+                extra.innerHTML = '<label>min</label><input class="range" type="text"/></input><label>max</label><input type="text"/></input><label>default</label><input type="text"></input>'
    }
 }
 

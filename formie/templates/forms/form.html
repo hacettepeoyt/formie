@@ -1,15 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% set ns = namespace(has_range = false) %}
 <form method="POST">
 {% for index, field in schema %}
     <label>{{ field['name'] }}<br>
     {% if field['type'] == 'text' %}
         <input type="text" name="col{{ index }}" value="{{ field['default'] }}"/>
-    {% elif field['type'] == 'range' %}
-        {% set ns.has_range = true %}
-        <input id='range{{ index }}' name="col{{ index }}" type="range" min="{{ field['min'] }}" max="{{ field['max'] }}" value="{{ field['default'] }}"/><input disabled type="text" id='label{{ index }}' value="{{ field['default'] }}"/></input>
     {% elif field['type'] == 'choice' %}
         {% if field['single'] %}
             {% for choice in field['choices'] %}
@@ -20,23 +16,11 @@
                 <input type="checkbox" name="col{{ index }}">{{ choice }}</input>
             {% endfor %}
         {% endif %}
+    {% elif field['type'] == 'range' %}
+        <input type="number" name="col{{ index }}" min="{{ field['min'] }}" max="{{ field['max'] }}" value="{{ field['default'] }}"></input>
     {% endif %}
     </label><br>
 {% endfor %}
 <input type="submit" value="Submit">
 </form>
-{% if ns.has_range %}
-<script type="text/javascript">
-{% for index, field in s2 %}
-{% if field['type'] == 'range' %}
-var range{{ index }} = document.getElementById("range{{ index }}");
-var label{{ index }} = document.getElementById("label{{ index }}");
-label{{ index }}.innerHTML = range{{ index }}.value;
-range{{ index }}.oninput = function() {
-label{{ index }}.value = this.value;
-};
-{% endif %}
-{% endfor %}
-</script>
-{% endif %}
 {% endblock %}
