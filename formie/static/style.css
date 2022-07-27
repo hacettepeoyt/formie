@@ -70,6 +70,8 @@ table {
     width: 100%;
     border: 1px solid #CCCCCC;
     border-collapse: collapse;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 td, th {
