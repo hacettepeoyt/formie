@@ -1,9 +1,11 @@
+import csv
 import datetime
+import io
 import json
 from dataclasses import dataclass
 from typing import List
 
-from flask import abort, g, redirect, render_template, request, url_for, Blueprint
+from flask import abort, g, redirect, render_template, request, url_for, Blueprint, Response
 
 from formie import auth
 from formie.models import db, Field, ChoiceField, Form, TextField, RangeField
@@ -129,6 +131,12 @@ def view_results(form_id: int):
         for col in model.__table__.columns.keys():
             cols.append(getattr(res, col))
         results.append(cols)
+
+    if request.args.get('format', default = None, type=str) == "csv":
+        buf = io.StringIO()
+        csv.writer(buf).writerows(results)
+        buf.seek(0)
+        return Response(buf.read(), mimetype='text/csv')
 
     return render_template(
         "forms/results.html", schema=schema, results=results
