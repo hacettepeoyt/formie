@@ -16,7 +16,7 @@ source=("https://github.com/div72/${pkgname}/archive/refs/tags/v${pkgver}.tar.gz
         "formie.service"
         "formie.sysusers"
         "formie.tmpfiles")
-sha256sums=("dc98e41fec933fbe3125f8890258fd1252a49e544cfc78698ed3e8c158a63c3e"
+sha256sums=("8a4d8b68e92ee82b08c30d9fb14bda6646351d632c1ea1331a7c3a456c5fbd3d"
             "SKIP"
             "SKIP"
             "SKIP"
