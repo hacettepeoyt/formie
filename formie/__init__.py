@@ -1,5 +1,6 @@
 import os
 
+import sqlalchemy
 from flask import redirect, render_template, url_for, Flask
 
 from formie import auth, forms, models
@@ -21,6 +22,11 @@ def create_app() -> Flask:
             app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
         )
 
+    with app.app_context():
+        try:
+            models.Form.query.all()
+        except sqlalchemy.exc.OperationalError:
+            models.db.create_all()
 
     @app.route("/")
     def index():
