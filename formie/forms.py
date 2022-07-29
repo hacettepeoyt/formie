@@ -2,6 +2,7 @@ import csv
 import datetime
 import io
 import json
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Flag
 from typing import List
@@ -113,7 +114,52 @@ def validate_schema(data: list) -> str:
     return ""
 
 
-def decode_fields(data: dict) -> List[Field]:
+def validate_answer(schema: list, form: dict) -> str:
+    """ Validates an answer against the given schema. Returns an error string on failure. """
+
+    for i, field in enumerate(schema):
+        if (not isinstance(field, ChoiceField) or field.single):
+            if f"col{i}" not in form:
+                return f"Question #{i + 1} is missing an answer."
+
+            answer = form[f"col{i}"]
+            if isinstance(field, TextField) and len(answer) > 1023:
+                return f"Question #{i + 1}'s answer cannot be longer than 1023 characters."
+            elif isinstance(field, (ChoiceField, RangeField)):
+                if not answer.isdigit():
+                    return f"Question #{i + 1} has an invalid answer."
+
+                try:
+                    answer = int(answer)
+                except ValueError:
+                    return f"Question #{i + 1} has an invalid answer."
+
+                if isinstance(field, ChoiceField) and answer >= len(field.choices):
+                    return f"Question #{i + 1} has an invalid answer."
+                elif isinstance(field, RangeField) and (answer < field.min or answer > field.max):
+                    return f"Question #{i + 1}'s answer is out of bounds."
+        else:
+            if f"col{i}" in form:
+                try:
+                    answer = int(answer)
+                except ValueError:
+                    return f"Question #{i + 1} has an invalid answer."
+            else:
+                answer: int = 0
+                for part in form:
+                    try:
+                        if part.startswith(f"col{i}"):
+                            answer |= 1 << int(part.split("_")[1])
+                    except ValueError:
+                        pass
+
+            if answer < 0 or answer >= (1 << len(field.choices)):
+                return f"Question #{i + 1}'s answer is out of bounds."
+
+    return ""
+
+
+def decode_fields(data: list) -> List[Field]:
     fields: List[Field] = []
     for elem in data:
         if "name" not in elem:
@@ -216,11 +262,41 @@ def form(form_id: int):
         if ACF.DISALLOW_ANON_ANSWER in ACF(form.access_control_flags) and g.user is None:
             abort(403)  # TODO: Better pages for aborts
 
-        db.session.add(model(**request.form))
+        error = validate_answer(decode_fields(schema), request.form)
+        if error:
+            return error, 400
+
+        values = defaultdict(int)
+        for key in request.form:
+            try:
+                if not key.startswith("col"):
+                    continue
+
+                parts = key.split("_")
+                key = parts[0]
+
+                idx = int(key.lstrip("col"))
+                if idx >= len(schema):
+                    continue
+
+                if len(parts) == 2:
+                    key = parts[0]
+                    values[key] |= 1 << int(parts[1])
+                else:
+                    values[key] = request.form[key]
+            except ValueError:
+                pass
+
+        db.session.add(model(**values))
         db.session.commit()
         return redirect(url_for("forms.view_results", form_id=form_id))
 
-    return render_template("forms/form.html", schema=enumerate(schema))
+    schema = list(enumerate(schema))
+    for i, field in schema:
+        if field["type"] == "choice":
+            schema[i][1]["choices"] = list(enumerate(schema[i][1]["choices"]))
+
+    return render_template("forms/form.html", schema=schema)
 
 
 @bp.route("/<int:form_id>/results")
@@ -233,12 +309,24 @@ def view_results(form_id: int):
         abort(403)
 
     schema = json.loads(form.schema)
-    model = create_model(str(form.id), decode_fields(schema))
+    fields = decode_fields(schema)
+    model = create_model(str(form.id), fields)
     results = []
     for res in model.query.all():
-        cols = []
-        for col in model.__table__.columns.keys():
-            cols.append(getattr(res, col))
+        cols = [res.id]
+        for i, field in enumerate(fields):
+            if not isinstance(field, ChoiceField):
+                cols.append(getattr(res, f"col{i}"))
+            else:
+                if field.single:
+                    cols.append(field.choices[int(getattr(res, f"col{i}"))])
+                else:
+                    answer_flag: int = int(getattr(res, f"col{i}"))
+                    answer: list[str] = []
+                    for choice_index, choice in enumerate(field.choices):
+                        if answer_flag & (1 << choice_index):
+                            answer.append(choice)
+                    cols.append("+".join(answer))
         results.append(cols)
 
     if request.args.get('format', default = None, type=str) == "csv":

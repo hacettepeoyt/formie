@@ -8,12 +8,12 @@
         <input type="text" name="col{{ index }}" value="{{ field['default'] }}"/>
     {% elif field['type'] == 'choice' %}
         {% if field['single'] %}
-            {% for choice in field['choices'] %}
-                <input type="radio" name="col{{ index }}" value="{{ choice }}">{{ choice }}</input>
+            {% for choice_index, choice in field['choices'] %}
+                <input type="radio" name="col{{ index }}" value="{{ choice_index }}" {% if choice_index == field['default'] %}checked="checked"{% endif %}>{{ choice }}</input>
             {% endfor %}
         {% else %}
-            {% for choice in field['choices'] %}
-                <input type="checkbox" name="col{{ index }}">{{ choice }}</input>
+            {% for choice_index, choice in field['choices'] %}
+                <input type="checkbox" name="col{{ index }}_{{ choice_index }}" value="1">{{ choice }}</input>
             {% endfor %}
         {% endif %}
     {% elif field['type'] == 'range' %}
