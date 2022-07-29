@@ -1,5 +1,8 @@
 let fields_div = document.getElementById('fields');
 
+let hide_results = document.getElementById('hide_results');
+let disallow_anon_answer = document.getElementById('disallow_anon_answer');
+
 var index = 0;
 
 function new_field() { 
@@ -71,7 +74,8 @@ function make_schema() {
 
 function submit_form() {
 	let req = new XMLHttpRequest();
-	req.open('POST', document.location.href, false);
+        const params = new URLSearchParams({"hide_results": hide_results.checked, "disallow_anon_answer": disallow_anon_answer.checked});
+	req.open('POST', document.location.href + `?${params}`, false);
 	req.setRequestHeader('Content-Type', 'application/json');
 	req.send(JSON.stringify(make_schema()));
         if (req.status === 400) {

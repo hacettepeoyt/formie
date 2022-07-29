@@ -227,6 +227,12 @@ def all_forms():
 @auth.login_required
 def new_form():
     if request.method == "POST":
+        acf: ACF = ACF(0)
+        if request.args.get("hide_results", "false") == "true":
+            acf |= ACF.HIDE_RESULTS
+        if request.args.get("disallow_anon_answer", "false") == "true":
+            acf |= ACF.DISALLOW_ANON_ANSWER
+
         schema = request.json
         error = validate_schema(schema)
 
@@ -236,7 +242,7 @@ def new_form():
         try:
             schema_str = json.dumps(schema)  # TODO: fetch original instead
             fields = decode_fields(schema)
-            form = Form(schema=schema_str, created_at=datetime.datetime.now(), creator_id=g.user.id)
+            form = Form(schema=schema_str, created_at=datetime.datetime.now(), creator_id=g.user.id, access_control_flags=acf.value)
             db.session.add(form)
             db.session.commit()
             create_model(str(form.id), fields).__table__.create(db.engine)

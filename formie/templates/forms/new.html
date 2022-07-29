@@ -7,5 +7,7 @@
 {% block content %}
 <button onclick="new_field()">New field</button>
 <div id="fields"></div>
-<button onclick="submit_form()">Create Form</button>
+<br><input id="hide_results" type="checkbox">Make results private.</input>
+<br><input id="disallow_anon_answer" type="checkbox">Block non-logged in users from answering.</input>
+<br><button onclick="submit_form()">Create Form</button>
 {% endblock %}
