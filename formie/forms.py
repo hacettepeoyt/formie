@@ -3,6 +3,7 @@ import datetime
 import io
 import json
 from dataclasses import dataclass
+from enum import Flag
 from typing import List
 
 from flask import abort, g, redirect, render_template, request, url_for, Blueprint, Response
@@ -11,6 +12,12 @@ from formie import auth
 from formie.models import db, Field, ChoiceField, Form, TextField, RangeField
 
 bp = Blueprint("forms", __name__, url_prefix="/forms")
+
+
+class ACF(Flag):
+    """ Access control flags for forms. Can be used to limit viewing results/answering for other users. """
+    HIDE_RESULTS = 0x1
+    DISALLOW_ANON_ANSWER = 0x2
 
 
 def decode_fields(data: dict) -> List[Field]:
@@ -110,6 +117,9 @@ def form(form_id: int):
     model = create_model(str(form.id), decode_fields(schema.copy()))
 
     if request.method == "POST":
+        if ACF.DISALLOW_ANON_ANSWER in ACF(form.access_control_flags) and g.user is None:
+            abort(403)  # TODO: Better pages for aborts
+
         db.session.add(model(**request.form))
         db.session.commit()
         return redirect(url_for("forms.view_results", form_id=form_id))
@@ -122,6 +132,9 @@ def view_results(form_id: int):
     form = Form.query.filter_by(id=form_id).first()
     if form is None:
         abort(404)
+
+    if ACF.HIDE_RESULTS in ACF(form.access_control_flags) and (g.user is None or g.user.id != form.creator_id):
+        abort(403)
 
     schema = json.loads(form.schema)
     model = create_model(str(form.id), decode_fields(schema))

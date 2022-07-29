@@ -17,6 +17,7 @@ class Form(db.Model):
     schema = db.Column(db.Text)
     created_at = db.Column(db.DateTime)
     creator_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    access_control_flags = db.Column(db.Integer, nullable=False, default=0)
 
     creator = db.relationship('User', foreign_keys='Form.creator_id')
 
