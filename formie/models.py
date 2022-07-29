@@ -29,14 +29,15 @@ class Field:
 
 @dataclass
 class TextField(Field):
-    default: str  # max 1024 bytes
+    default: str  # max 1023 bytes
 
 
 @dataclass
 class ChoiceField(Field):
     single: bool
     default: int
-    choices: List[str]  # max 64 if single is false
+    choices: List[str]  # max 64 elements with 64 length
+
 
 @dataclass
 class RangeField(Field):

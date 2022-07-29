@@ -46,11 +46,11 @@ function make_schema() {
 	for (field of fields_div.children) {
 		let schema_field = {};
 		schema_field.name = field.children[0].value;
-		if ((field.children.length >= 3) && (field.children[2].children.length >= 2) && (field.children[2].children[1].className = "range")) {
+		if (field.children[1].selectedIndex === 3) {
 			schema_field.type = "range";
-			schema_field.min = field.children[2].children[1].value;
-			schema_field.max = field.children[2].children[3].value;
-			schema_field.default = field.children[2].children[5].value;
+			schema_field.min = parseInt(field.children[2].children[1].value);
+			schema_field.max = parseInt(field.children[2].children[3].value);
+			schema_field.default = parseInt(field.children[2].children[5].value);
 		} else if (field.children[1].selectedIndex === 0) {
 			schema_field.type = "text";
 			schema_field.default = field.children[2].lastChild.value;
@@ -74,5 +74,13 @@ function submit_form() {
 	req.open('POST', document.location.href, false);
 	req.setRequestHeader('Content-Type', 'application/json');
 	req.send(JSON.stringify(make_schema()));
-        window.location.href = '/';
+        if (req.status === 400) {
+            alert(req.responseText);
+        } else if (req.status === 200) {
+            window.location.href = req.responseText;
+        } else {
+            document.open("text/html");
+            document.write(req.responseText);
+            document.close();
+        }
 }
