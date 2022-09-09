@@ -3,23 +3,29 @@
 {% block content %}
 <form method="POST">
 {% for index, field in schema %}
-    <label>{{ field['name'] }}<br>
+    {{ field['name'] }}<br>
     {% if field['type'] == 'text' %}
         <input type="text" name="col{{ index }}" value="{{ field['default'] }}"/>
     {% elif field['type'] == 'choice' %}
         {% if field['single'] %}
             {% for choice_index, choice in field['choices'] %}
-                <input type="radio" name="col{{ index }}" value="{{ choice_index }}" {% if choice_index == field['default'] %}checked="checked"{% endif %}>{{ choice }}</input>
+                <label>
+                <input type="radio" name="col{{ index }}" value="{{ choice_index }}" {% if choice_index == field['default'] %}checked="checked"{% endif %}>
+                {{ choice }}
+                </label>
             {% endfor %}
         {% else %}
             {% for choice_index, choice in field['choices'] %}
-                <input type="checkbox" name="col{{ index }}_{{ choice_index }}" value="1">{{ choice }}</input>
+                <label>
+                <input type="checkbox" name="col{{ index }}_{{ choice_index }}" value="1">
+                {{ choice }}
+                </label>
             {% endfor %}
         {% endif %}
     {% elif field['type'] == 'range' %}
         <input type="number" name="col{{ index }}" min="{{ field['min'] }}" max="{{ field['max'] }}" value="{{ field['default'] }}"></input>
     {% endif %}
-    </label><br>
+    <br>
 {% endfor %}
 <input type="submit" value="Submit">
 </form>
