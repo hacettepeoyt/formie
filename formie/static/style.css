@@ -9,26 +9,25 @@ nav {
     background-color: #111111;
     color: white;
     overflow: hidden;
-    display: inline-block;
-    width: 99%;
-    padding: 0.5%;
-    padding-top: 5px;
+    display: flex;
+    width: calc(100% - 10px);
+    padding: 5px;
 }
 
 nav h1 {
-   margin: auto;
    float: left;
    display: block;
    vertical-align: middle;
    margin-top: auto;
    margin-bottom: auto;
+   margin-left: 10px;
 }
 
 nav ul {
     display: block;
     list-style-type: none;
     overflow: visible;
-    float: right;
+    margin-left: auto;
 }
 
 nav li {
