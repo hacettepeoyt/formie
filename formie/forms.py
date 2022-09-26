@@ -295,6 +295,9 @@ def form(form_id: int):
 
         db.session.add(model(**values))
         db.session.commit()
+
+        if url := request.args.get("goto", None):
+            return redirect(url)
         return redirect(url_for("forms.view_results", form_id=form_id))
 
     schema = list(enumerate(schema))
