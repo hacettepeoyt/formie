@@ -38,6 +38,7 @@ nav a {
     padding: 10px;
     padding-left: 20px;
     padding-right: 20px;
+    margin-top: 20px;
 }
 
 .content ul {
@@ -77,3 +78,30 @@ tr:nth-child(odd) {
 tr:nth-child(even) {
   background-color: #DDDDDD;
 }
+
+form {
+    margin: 0 auto;
+    width: 75%
+}
+
+.question-outer {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.question-inner {
+    margin: 0 auto;
+    width: 75%;
+    min-width: 250px;
+}
+
+input[type="text"] {
+    width: 90%;
+    min-width: 250px;
+}
+
+input[type="number"] {
+    min-width: 250px;
+}
+
+

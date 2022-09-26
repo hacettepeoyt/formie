@@ -3,6 +3,8 @@
 {% block content %}
 <form method="POST">
 {% for index, field in schema %}
+    <div class="question-outer">
+    <div class="question-inner">
     {{ field['name'] }}<br>
     {% if field['type'] == 'text' %}
         <input type="text" name="col{{ index }}" value="{{ field['default'] }}"/>
@@ -25,8 +27,14 @@
     {% elif field['type'] == 'range' %}
         <input type="number" name="col{{ index }}" min="{{ field['min'] }}" max="{{ field['max'] }}" value="{{ field['default'] }}"></input>
     {% endif %}
+    </div>
+    </div>
     <br>
 {% endfor %}
+<div class="question-outer">
+<div class="question-inner">
 <input type="submit" value="Submit">
+<div class="question-inner">
+</div>
 </form>
 {% endblock %}
