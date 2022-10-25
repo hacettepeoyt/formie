@@ -2,4 +2,9 @@
 
 {% block content %}
 Form submission successful!
+<br>
+<br>
+{% if can_view_results %}
+You can view the results by <a href={{ results_url }}>clicking here.</a>
+{% endif %}
 {% endblock %}
