@@ -298,6 +298,10 @@ def form(form_id: int):
 
         if url := request.args.get("goto", None):
             return redirect(url)
+
+        if ACF.HIDE_RESULTS in ACF(form.access_control_flags) and (g.user is None or g.user.id != form.creator_id):
+            return redirect(url_for("forms.submission_successful"))
+
         return redirect(url_for("forms.view_results", form_id=form_id))
 
     schema = list(enumerate(schema))
@@ -347,3 +351,8 @@ def view_results(form_id: int):
     return render_template(
         "forms/results.html", schema=schema, results=results
     )
+
+
+@bp.route("/submission-successful")
+def submission_successful():
+    return render_template("forms/submission_successful.html")
