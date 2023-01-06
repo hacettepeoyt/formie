@@ -1,0 +1,27 @@
+name: Lint
+
+on:
+  pull_request:
+    branches-ignore:
+      - 'master'
+  push:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: setup
+      run: |
+        pip install black mypy
+        pip install -r requirements.txt
+        mypy formie > /dev/null || true
+        yes | mypy --install-types
+    - name: run black
+      run: |
+        black --check $(find formie -name '*.py' | paste -s)
+    - name: run mypy
+      run: |
+        mypy --strict formie
