@@ -5,7 +5,7 @@ import sys
 from formie import create_app, models
 
 
-def main():
+def main() -> None:
     try:
         version: int = int(sys.argv[1])
     except (IndexError, ValueError):

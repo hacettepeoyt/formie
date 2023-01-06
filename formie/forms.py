@@ -5,14 +5,21 @@ import json
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Flag
-from typing import List
+from typing import cast, Type, TYPE_CHECKING, Union
 
 from flask import abort, g, redirect, render_template, request, url_for, Blueprint, Response
+if TYPE_CHECKING:
+    from flask.typing import ResponseReturnValue
+else:
+    ResponseReturnValue = 'ResponseReturnValue'
 
 from formie import auth
-from formie.models import db, Field, ChoiceField, Form, TextField, RangeField
+from formie.models import db, Field, ChoiceField, Form, Model, TextField, RangeField
 
 bp = Blueprint("forms", __name__, url_prefix="/forms")
+
+
+JSONData = Union[str, int, bool, float, list['JSONData'], dict[str, 'JSONData']]
 
 
 class ACF(Flag):
@@ -21,14 +28,14 @@ class ACF(Flag):
     DISALLOW_ANON_ANSWER = 0x2
 
 
-def validate_schema(data: list) -> str:
+def validate_schema(data: JSONData) -> str:
     """ Validates the given schema. Returns a string with the error on fail. """
+    if not isinstance(data, list):
+        return "Invalid schema root type."
+
     if len(data) == 0:
         # Disallow empty schemas.
         return "Cannot make an empty form."
-
-    if not isinstance(data, list):
-        return "Invalid schema root type."
 
     if len(data) > 64:
         return f"Cannot have more than 64 fields."
@@ -37,7 +44,10 @@ def validate_schema(data: list) -> str:
         if not isinstance(field, dict):
             return f"Invalid type for field #{i}"
 
-        if "name" not in field or len(field["name"]) == 0:
+        if TYPE_CHECKING:
+            field = cast(dict[str, JSONData], field)
+
+        if "name" not in field or not isinstance(field, str) or len(field["name"]) == 0:
             return f"Field #{i} requires a question."
 
         if len(field["name"]) > 256:
@@ -114,7 +124,7 @@ def validate_schema(data: list) -> str:
     return ""
 
 
-def validate_answer(schema: list, form: dict) -> str:
+def validate_answer(schema: list[Field], form: dict[str, str]) -> str:
     """ Validates an answer against the given schema. Returns an error string on failure. """
 
     for i, field in enumerate(schema):
@@ -122,15 +132,15 @@ def validate_answer(schema: list, form: dict) -> str:
             if f"col{i}" not in form:
                 return f"Question #{i + 1} is missing an answer."
 
-            answer = form[f"col{i}"]
-            if isinstance(field, TextField) and len(answer) > 1023:
+            if isinstance(field, TextField) and len(form[f"col{i}"]) > 1023:
                 return f"Question #{i + 1}'s answer cannot be longer than 1023 characters."
             elif isinstance(field, (ChoiceField, RangeField)):
-                if not answer.isdigit():
-                    return f"Question #{i + 1} has an invalid answer."
+                # log10(2 ** 64) ~= 19 so 20 characters should be more than enough.
+                if len(form[f"col{i}"]) > 20:
+                    return f"Question #{i + 1} answer is out of bounds."
 
                 try:
-                    answer = int(answer)
+                    answer = int(form[f"col{i}"])
                 except ValueError:
                     return f"Question #{i + 1} has an invalid answer."
 
@@ -145,7 +155,7 @@ def validate_answer(schema: list, form: dict) -> str:
                 except ValueError:
                     return f"Question #{i + 1} has an invalid answer."
             else:
-                answer: int = 0
+                answer = 0
                 for part in form:
                     try:
                         if part.startswith(f"col{i}"):
@@ -159,40 +169,43 @@ def validate_answer(schema: list, form: dict) -> str:
     return ""
 
 
-def decode_fields(data: list) -> List[Field]:
-    fields: List[Field] = []
+def decode_fields(data: list[dict[str, JSONData]]) -> list[Field]:
+    fields: list[Field] = []
     for elem in data:
-        if "name" not in elem:
-            raise ValueError("invalid format")
-        if len(elem["name"]) > 256:
-            raise ValueError("invalid value")
+        assert isinstance(elem["name"], str)
 
         if elem["type"] == "text":
             del elem["type"]
-            if len(elem) != 2:
-                raise ValueError("invalid format")
-            if len(elem["default"]) > 1024:
-                raise ValueError("invalid value")
 
-            fields.append(TextField(**elem))
+            assert isinstance(elem["default"], str)
+
+            fields.append(TextField(name=elem["name"], default=elem["default"]))
+
             elem["type"] = "text"
         elif elem["type"] == "choice":
             del elem["type"]
 
-            fields.append(ChoiceField(**elem))
+            assert isinstance(elem["single"], bool)
+            assert isinstance(elem["default"], int)
+            assert isinstance(elem["choices"], list)
+
+            fields.append(ChoiceField(name=elem["name"], single=elem["single"], default=elem["default"], choices=elem["choices"])) # type: ignore[arg-type]
             elem["type"] = "choice"
         elif elem["type"] == "range":
             del elem["type"]
-            fields.append(RangeField(**elem))
+
+            assert isinstance(elem["default"], int)
+            assert isinstance(elem["min"], int)
+            assert isinstance(elem["max"], int)
+
+            fields.append(RangeField(name=elem["name"], default=elem["default"], min=elem["min"], max=elem["max"]))
             elem["type"] = "range"
-        else:
-            raise ValueError("invalid format")
     return fields
 
 
-MODELS = {}
+MODELS: dict[str, Type[Model]] = {}
 
-def create_model(name: str, fields: List[Field]):
+def create_model(name: str, fields: list[Field]) -> Type[Model]:
     if name in MODELS:
         return MODELS[name]
 
@@ -205,13 +218,13 @@ def create_model(name: str, fields: List[Field]):
         elif isinstance(field, RangeField):
             col = db.Column(db.Integer, default=field.default)
         cols[f"col{i}"] = col
-    cls = type(name, (db.Model,), cols)
+    cls = type(name, (db.Model,), cols) # type: ignore[arg-type]
     MODELS[name] = cls
     return cls
 
 
 @bp.route("/")
-def all_forms():
+def all_forms() -> ResponseReturnValue:
     forms = []
     for form in Form.query.all():
         form_dict = {}
@@ -225,7 +238,7 @@ def all_forms():
 
 @bp.route("/new", methods=("GET", "POST"))
 @auth.login_required
-def new_form():
+def new_form() -> ResponseReturnValue:
     if request.method == "POST":
         acf: ACF = ACF(0)
         if request.args.get("hide_results", "false") == "true":
@@ -234,14 +247,17 @@ def new_form():
             acf |= ACF.DISALLOW_ANON_ANSWER
 
         schema = request.json
-        error = validate_schema(schema)
+        if schema is None:
+            return "A JSON Body is required", 400
+
+        error = validate_schema(cast(JSONData, schema))
 
         if error:
             return error, 400
 
         try:
             schema_str = json.dumps(schema)  # TODO: fetch original instead
-            fields = decode_fields(schema)
+            fields = decode_fields(cast(list[dict[str, JSONData]], schema))
             form = Form(schema=schema_str, created_at=datetime.datetime.now(), creator_id=g.user.id, access_control_flags=acf.value)
             db.session.add(form)
             db.session.commit()
@@ -256,7 +272,7 @@ def new_form():
 
 
 @bp.route("/<int:form_id>", methods=("GET", "POST"))
-def form(form_id: int):
+def form(form_id: int) -> ResponseReturnValue:
     form = Form.query.filter_by(id=form_id).first()
     if form is None:
         abort(404)
@@ -272,7 +288,7 @@ def form(form_id: int):
         if error:
             return error, 400
 
-        values = defaultdict(int)
+        values: dict[str, Union[int, str]] = defaultdict(int)
         for key in request.form:
             try:
                 if not key.startswith("col"):
@@ -287,13 +303,14 @@ def form(form_id: int):
 
                 if len(parts) == 2:
                     key = parts[0]
-                    values[key] |= 1 << int(parts[1])
+                    assert isinstance(values[key], int)
+                    values[key] = cast(int, values[key]) | (1 << int(parts[1]))
                 else:
                     values[key] = request.form[key]
             except ValueError:
                 pass
 
-        db.session.add(model(**values))
+        db.session.add(model(**values)) # type: ignore[arg-type]
         db.session.commit()
 
         if url := request.args.get("goto", None):
@@ -313,7 +330,7 @@ def form(form_id: int):
 
 
 @bp.route("/<int:form_id>/results")
-def view_results(form_id: int):
+def view_results(form_id: int) -> ResponseReturnValue:
     form = Form.query.filter_by(id=form_id).first()
     if form is None:
         abort(404)
@@ -346,7 +363,7 @@ def view_results(form_id: int):
         buf = io.StringIO()
         csv.writer(buf).writerows(results)
         buf.seek(0)
-        return Response(buf.read(), mimetype='text/csv')
+        return cast(Union[Response, str], Response(buf.read(), mimetype='text/csv'))
 
     return render_template(
         "forms/results.html", schema=schema, results=results

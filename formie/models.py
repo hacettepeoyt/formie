@@ -1,25 +1,56 @@
 from dataclasses import dataclass
-from typing import List
+from typing import Any, TYPE_CHECKING
 
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+if TYPE_CHECKING:
+    # Absolutely horrendous type checking hacks. Does not work anyways.
+    # TODO: remove with SQLAlchemy.
+    from dataclasses import dataclass as fake_dataclass
+
+    class Query:
+        filter_by: 'Query'
+
+        def __init__(self) -> None:
+            ...
+
+        def __call__(self, **kwargs: Any) -> 'Query':
+            ...
+
+        def first(self) -> Any:
+            ...
+
+        def all(self) -> list[Any]:
+            ...
+
+    @fake_dataclass
+    class _Model:
+        query: Query = Query()
+        __table__: Any = None
+
+    Model = _Model
+else:
+    Model = db.Model
+    fake_dataclass = lambda x: x
 
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.Text, unique=True)
-    password = db.Column(db.Text)  # argon2 hash
+@fake_dataclass
+class User(Model):
+    id: int = db.Column(db.Integer, primary_key=True)
+    username: str = db.Column(db.Text, unique=True)
+    password: str = db.Column(db.Text)  # argon2 hash
 
 
-class Form(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    schema = db.Column(db.Text)
-    created_at = db.Column(db.DateTime)
-    creator_id = db.Column(db.Integer, db.ForeignKey(User.id))
-    access_control_flags = db.Column(db.Integer, nullable=False, default=0)
+@fake_dataclass
+class Form(Model):
+    id: int = db.Column(db.Integer, primary_key=True)
+    schema: str = db.Column(db.Text)
+    created_at: Any = db.Column(db.DateTime)
+    creator_id: int = db.Column(db.Integer, db.ForeignKey(User.id))
+    access_control_flags: int = db.Column(db.Integer, nullable=False, default=0)
 
-    creator = db.relationship('User', foreign_keys='Form.creator_id')
+    creator: User = db.relationship('User', foreign_keys='Form.creator_id')
 
 
 @dataclass
@@ -36,7 +67,7 @@ class TextField(Field):
 class ChoiceField(Field):
     single: bool
     default: int
-    choices: List[str]  # max 64 elements with 64 length
+    choices: list[str]  # max 64 elements with 64 length
 
 
 @dataclass
