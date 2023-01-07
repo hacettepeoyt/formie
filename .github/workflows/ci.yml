@@ -17,11 +17,11 @@ jobs:
       run: |
         pip install black mypy
         pip install -r requirements.txt
-        mypy formie > /dev/null || true
+        mypy *.py formie > /dev/null || true
         yes | mypy --install-types
     - name: run black
       run: |
-        black --check $(find formie -name '*.py' | paste -s)
+        black --check *.py $(find formie -name '*.py' | paste -s)
     - name: run mypy
       run: |
-        mypy --strict formie
+        mypy --strict *.py formie
