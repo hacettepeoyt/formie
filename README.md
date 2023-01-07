@@ -4,14 +4,6 @@ Open source form application made with pure HTML/CSS/JS. Needs minimal client-si
 
 ## Setup
 
-```sh
-export SQLALCHEMY_DATABASE_URI="sqlite:///test.db"
-export SECRET_KEY="fiesta"
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-python3 setup-db.py 0
+Python 3.9+ is required to run Formie. If you are running Formie for a development build, you can just run `make run`.
 
-# Run with:
-source venv/bin/activate
-FLASK_APP=formie FLASK_ENV=development flask run
-```
+If you are planning on running Formie on production, I'd advise looking at my [PKGBUILDs](https://github.com/div72/PKGBUILDs/tree/development/formie) repo.
