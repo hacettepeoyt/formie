@@ -23,7 +23,9 @@ def main() -> None:
     elif version == 1:
         with create_app().app_context():
             with models.db.engine.begin() as conn:
-                conn.execute("ALTER TABLE Form ADD COLUMN access_control_flags INT NOT NULL DEFAULT 0;")
+                conn.execute(
+                    "ALTER TABLE Form ADD COLUMN access_control_flags INT NOT NULL DEFAULT 0;"
+                )
     else:
         print("ERROR: invalid version", file=sys.stderr)
         sys.exit(1)

@@ -20,7 +20,9 @@ from formie.models import db, User
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
-def login_required(view: Callable[..., ResponseReturnValue]) -> Callable[..., ResponseReturnValue]:
+def login_required(
+    view: Callable[..., ResponseReturnValue]
+) -> Callable[..., ResponseReturnValue]:
     """View decorator that redirects anonymous users to the login page."""
 
     @functools.wraps(view)
@@ -67,7 +69,7 @@ def register() -> ResponseReturnValue:
 
         if error is None:
             try:
-                db.session.add(User(username=username, password=argon2.hash(password))) # type: ignore[no-untyped-call]
+                db.session.add(User(username=username, password=argon2.hash(password)))  # type: ignore[no-untyped-call]
                 db.session.commit()
 
                 return redirect(url_for("auth.login"))
@@ -88,7 +90,7 @@ def login() -> ResponseReturnValue:
         error = None
         user = User.query.filter_by(username=username).first()
 
-        if user is None or not argon2.verify(password, user.password): # type: ignore[no-untyped-call]
+        if user is None or not argon2.verify(password, user.password):  # type: ignore[no-untyped-call]
             error = "Incorrect username/password."
 
         if error is None:

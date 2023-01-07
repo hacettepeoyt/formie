@@ -7,11 +7,21 @@ from dataclasses import dataclass
 from enum import Flag
 from typing import cast, Type, TYPE_CHECKING, Union
 
-from flask import abort, g, redirect, render_template, request, url_for, Blueprint, Response
+from flask import (
+    abort,
+    g,
+    redirect,
+    render_template,
+    request,
+    url_for,
+    Blueprint,
+    Response,
+)
+
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
 else:
-    ResponseReturnValue = 'ResponseReturnValue'
+    ResponseReturnValue = "ResponseReturnValue"
 
 from formie import auth
 from formie.models import db, Field, ChoiceField, Form, Model, TextField, RangeField
@@ -19,17 +29,18 @@ from formie.models import db, Field, ChoiceField, Form, Model, TextField, RangeF
 bp = Blueprint("forms", __name__, url_prefix="/forms")
 
 
-JSONData = Union[str, int, bool, float, list['JSONData'], dict[str, 'JSONData']]
+JSONData = Union[str, int, bool, float, list["JSONData"], dict[str, "JSONData"]]
 
 
 class ACF(Flag):
-    """ Access control flags for forms. Can be used to limit viewing results/answering for other users. """
+    """Access control flags for forms. Can be used to limit viewing results/answering for other users."""
+
     HIDE_RESULTS = 0x1
     DISALLOW_ANON_ANSWER = 0x2
 
 
 def validate_schema(data: JSONData) -> str:
-    """ Validates the given schema. Returns a string with the error on fail. """
+    """Validates the given schema. Returns a string with the error on fail."""
     if not isinstance(data, list):
         return "Invalid schema root type."
 
@@ -98,7 +109,9 @@ def validate_schema(data: JSONData) -> str:
                     return f"Field #{i} choice #{ci} must be a string."
 
                 if len(choice) > 64:
-                    return f"Field #{i} choice #{ci} cannot have more than 64 characters."
+                    return (
+                        f"Field #{i} choice #{ci} cannot have more than 64 characters."
+                    )
 
             if len(field) != 5:
                 return f"Field #{i} cannot have more than 5 attributes."
@@ -125,15 +138,17 @@ def validate_schema(data: JSONData) -> str:
 
 
 def validate_answer(schema: list[Field], form: dict[str, str]) -> str:
-    """ Validates an answer against the given schema. Returns an error string on failure. """
+    """Validates an answer against the given schema. Returns an error string on failure."""
 
     for i, field in enumerate(schema):
-        if (not isinstance(field, ChoiceField) or field.single):
+        if not isinstance(field, ChoiceField) or field.single:
             if f"col{i}" not in form:
                 return f"Question #{i + 1} is missing an answer."
 
             if isinstance(field, TextField) and len(form[f"col{i}"]) > 1023:
-                return f"Question #{i + 1}'s answer cannot be longer than 1023 characters."
+                return (
+                    f"Question #{i + 1}'s answer cannot be longer than 1023 characters."
+                )
             elif isinstance(field, (ChoiceField, RangeField)):
                 # log10(2 ** 64) ~= 19 so 20 characters should be more than enough.
                 if len(form[f"col{i}"]) > 20:
@@ -146,7 +161,9 @@ def validate_answer(schema: list[Field], form: dict[str, str]) -> str:
 
                 if isinstance(field, ChoiceField) and answer >= len(field.choices):
                     return f"Question #{i + 1} has an invalid answer."
-                elif isinstance(field, RangeField) and (answer < field.min or answer > field.max):
+                elif isinstance(field, RangeField) and (
+                    answer < field.min or answer > field.max
+                ):
                     return f"Question #{i + 1}'s answer is out of bounds."
         else:
             if f"col{i}" in form:
@@ -189,7 +206,7 @@ def decode_fields(data: list[dict[str, JSONData]]) -> list[Field]:
             assert isinstance(elem["default"], int)
             assert isinstance(elem["choices"], list)
 
-            fields.append(ChoiceField(name=elem["name"], single=elem["single"], default=elem["default"], choices=elem["choices"])) # type: ignore[arg-type]
+            fields.append(ChoiceField(name=elem["name"], single=elem["single"], default=elem["default"], choices=elem["choices"]))  # type: ignore[arg-type]
             elem["type"] = "choice"
         elif elem["type"] == "range":
             del elem["type"]
@@ -198,12 +215,20 @@ def decode_fields(data: list[dict[str, JSONData]]) -> list[Field]:
             assert isinstance(elem["min"], int)
             assert isinstance(elem["max"], int)
 
-            fields.append(RangeField(name=elem["name"], default=elem["default"], min=elem["min"], max=elem["max"]))
+            fields.append(
+                RangeField(
+                    name=elem["name"],
+                    default=elem["default"],
+                    min=elem["min"],
+                    max=elem["max"],
+                )
+            )
             elem["type"] = "range"
     return fields
 
 
 MODELS: dict[str, Type[Model]] = {}
+
 
 def create_model(name: str, fields: list[Field]) -> Type[Model]:
     if name in MODELS:
@@ -218,7 +243,7 @@ def create_model(name: str, fields: list[Field]) -> Type[Model]:
         elif isinstance(field, RangeField):
             col = db.Column(db.Integer, default=field.default)
         cols[f"col{i}"] = col
-    cls = type(name, (db.Model,), cols) # type: ignore[arg-type]
+    cls = type(name, (db.Model,), cols)  # type: ignore[arg-type]
     MODELS[name] = cls
     return cls
 
@@ -256,9 +281,14 @@ def new_form() -> ResponseReturnValue:
             return error, 400
 
         try:
-            schema_str = json.dumps(schema)  # TODO: fetch original instead
+            schema_str = json.dumps(schema)  # TODO: fetch original instead
             fields = decode_fields(cast(list[dict[str, JSONData]], schema))
-            form = Form(schema=schema_str, created_at=datetime.datetime.now(), creator_id=g.user.id, access_control_flags=acf.value)
+            form = Form(
+                schema=schema_str,
+                created_at=datetime.datetime.now(),
+                creator_id=g.user.id,
+                access_control_flags=acf.value,
+            )
             db.session.add(form)
             db.session.commit()
             create_model(str(form.id), fields).__table__.create(db.engine)
@@ -281,7 +311,10 @@ def form(form_id: int) -> ResponseReturnValue:
     model = create_model(str(form.id), decode_fields(schema.copy()))
 
     if request.method == "POST":
-        if ACF.DISALLOW_ANON_ANSWER in ACF(form.access_control_flags) and g.user is None:
+        if (
+            ACF.DISALLOW_ANON_ANSWER in ACF(form.access_control_flags)
+            and g.user is None
+        ):
             abort(403)  # TODO: Better pages for aborts
 
         error = validate_answer(decode_fields(schema), request.form)
@@ -310,16 +343,22 @@ def form(form_id: int) -> ResponseReturnValue:
             except ValueError:
                 pass
 
-        db.session.add(model(**values)) # type: ignore[arg-type]
+        db.session.add(model(**values))  # type: ignore[arg-type]
         db.session.commit()
 
         if url := request.args.get("goto", None):
             return redirect(url)
 
-        can_view_results: bool = ACF.HIDE_RESULTS not in ACF(form.access_control_flags) or (g.user is not None and g.user.id == form.creator_id)
+        can_view_results: bool = ACF.HIDE_RESULTS not in ACF(
+            form.access_control_flags
+        ) or (g.user is not None and g.user.id == form.creator_id)
         results_url: str = url_for("forms.view_results", form_id=form_id)
 
-        return render_template("forms/submission_successful.html", can_view_results=can_view_results, results_url=results_url)
+        return render_template(
+            "forms/submission_successful.html",
+            can_view_results=can_view_results,
+            results_url=results_url,
+        )
 
     schema = list(enumerate(schema))
     for i, field in schema:
@@ -335,7 +374,9 @@ def view_results(form_id: int) -> ResponseReturnValue:
     if form is None:
         abort(404)
 
-    if ACF.HIDE_RESULTS in ACF(form.access_control_flags) and (g.user is None or g.user.id != form.creator_id):
+    if ACF.HIDE_RESULTS in ACF(form.access_control_flags) and (
+        g.user is None or g.user.id != form.creator_id
+    ):
         abort(403)
 
     schema = json.loads(form.schema)
@@ -359,13 +400,10 @@ def view_results(form_id: int) -> ResponseReturnValue:
                     cols.append("+".join(answer))
         results.append(cols)
 
-    if request.args.get('format', default = None, type=str) == "csv":
+    if request.args.get("format", default=None, type=str) == "csv":
         buf = io.StringIO()
         csv.writer(buf).writerows(results)
         buf.seek(0)
-        return cast(Union[Response, str], Response(buf.read(), mimetype='text/csv'))
+        return cast(Union[Response, str], Response(buf.read(), mimetype="text/csv"))
 
-    return render_template(
-        "forms/results.html", schema=schema, results=results
-    )
-
+    return render_template("forms/results.html", schema=schema, results=results)
