@@ -58,7 +58,11 @@ def validate_schema(data: JSONData) -> str:
         if TYPE_CHECKING:
             field = cast(dict[str, JSONData], field)
 
-        if "name" not in field or not isinstance(field["name"], str) or len(field["name"]) == 0:
+        if (
+            "name" not in field
+            or not isinstance(field["name"], str)
+            or len(field["name"]) == 0
+        ):
             return f"Field #{i} requires a question."
 
         if len(field["name"]) > 256:
