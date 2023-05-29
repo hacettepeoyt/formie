@@ -112,3 +112,26 @@ p {
         padding-right: 20%;
     }
 }
+
+/* --- LOGIN/REGISTER PAGE START ---- */
+
+.auth-form {
+    display: table;
+    margin: 0 auto;
+}
+
+.auth-field {
+    display: table-row;
+}
+
+.auth-field label {
+    display: table-cell;
+    padding-bottom: 7px;
+    padding-right: 10px;
+}
+
+.auth-field input {
+    display: table-cell;
+}
+
+/* ---- LOGIN/REGISTER PAGE END ---- */
