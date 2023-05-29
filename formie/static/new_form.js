@@ -36,6 +36,14 @@ function change_field(field, typ) {
    }
 }
 
+function new_info() {
+    fields_div.insertAdjacentHTML('beforeend', `
+<div id="field${index}">
+	<textarea id="text"></textarea>
+	<button onclick="this.parentElement.remove()">Remove field</button>
+</div>`);
+}
+
 function add_choice(element, is_radio) {
 	var typ = 'checkbox';
 	if (is_radio) typ = 'radio';
@@ -48,25 +56,33 @@ function make_schema() {
 	let schema = [];
 	for (field of fields_div.children) {
 		let schema_field = {};
-		schema_field.name = field.children[0].value;
-		if (field.children[1].selectedIndex === 3) {
-			schema_field.type = "range";
-			schema_field.min = parseInt(field.children[2].children[1].value);
-			schema_field.max = parseInt(field.children[2].children[3].value);
-			schema_field.default = parseInt(field.children[2].children[5].value);
-		} else if (field.children[1].selectedIndex === 0) {
-			schema_field.type = "text";
-			schema_field.default = field.children[2].lastChild.value;
-		} else {
-			schema_field.choices = [];
-			schema_field.single = false;
-			schema_field.type = "choice";
-			schema_field.default = 0;
-			if (field.children[1].selectedIndex === 1) schema_field.single = true;
-			for (choice of field.children[2].children) {
-				if (choice.tagName == 'INPUT' && choice.type == 'text') schema_field.choices.push(choice.value);
-			}
-		}
+        if (field.children[0].tagName === 'TEXTAREA') {
+            // Information field
+            schema_field.type = "info";
+            schema_field.text = field.children[0].value;
+        } else {
+            // Question field
+            schema_field.name = field.children[0].value;
+
+            if (field.children[1].selectedIndex === 3) {
+                schema_field.type = "range";
+                schema_field.min = parseInt(field.children[2].children[1].value);
+                schema_field.max = parseInt(field.children[2].children[3].value);
+                schema_field.default = parseInt(field.children[2].children[5].value);
+            } else if (field.children[1].selectedIndex === 0) {
+                schema_field.type = "text";
+                schema_field.default = field.children[2].lastChild.value;
+            } else {
+                schema_field.choices = [];
+                schema_field.single = false;
+                schema_field.type = "choice";
+                schema_field.default = 0;
+                if (field.children[1].selectedIndex === 1) schema_field.single = true;
+                for (choice of field.children[2].children) {
+                    if (choice.tagName == 'INPUT' && choice.type == 'text') schema_field.choices.push(choice.value);
+                }
+            }
+        }
 		schema.push(schema_field);
 	}
 	return schema;

@@ -26,6 +26,8 @@
         {% endif %}
     {% elif field['type'] == 'range' %}
         <input type="number" name="col{{ index }}" min="{{ field['min'] }}" max="{{ field['max'] }}" value="{{ field['default'] }}"></input>
+    {% elif field['type'] == 'info' %}
+        <p>{{ field['text'] }}</p>
     {% endif %}
     </div>
     </div>

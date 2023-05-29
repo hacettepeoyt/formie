@@ -59,6 +59,11 @@ class Field:
 
 
 @dataclass
+class InfoField:
+    text: str # max 512 characters
+
+
+@dataclass
 class TextField(Field):
     default: str  # max 1023 bytes
 

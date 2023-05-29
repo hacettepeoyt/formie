@@ -24,7 +24,7 @@ else:
     ResponseReturnValue = "ResponseReturnValue"
 
 from formie import auth
-from formie.models import db, Field, ChoiceField, Form, Model, TextField, RangeField
+from formie.models import db, Field, ChoiceField, Form, InfoField, Model, TextField, RangeField
 
 bp = Blueprint("forms", __name__, url_prefix="/forms")
 
@@ -58,6 +58,24 @@ def validate_schema(data: JSONData) -> str:
         if TYPE_CHECKING:
             field = cast(dict[str, JSONData], field)
 
+        if "type" not in field:
+            return f"Field #{i} needs a type."
+
+        if field["type"] == "info":
+            if "text" not in field:
+                return f"Field #{i} needs information text."
+
+            if len(field) != 2:
+                return f"Field #{i} cannot have more than 2 attributes."
+
+            if not isinstance(field["text"], str):
+                return f"Field #{i} has invalid text type."
+
+            if len(field["text"]) > 512:
+                return f"Field #{i}'s information text cannot have more than 512 characters."
+
+            continue
+
         if (
             "name" not in field
             or not isinstance(field["name"], str)
@@ -67,9 +85,6 @@ def validate_schema(data: JSONData) -> str:
 
         if len(field["name"]) > 256:
             return f"Field #{i}'s question cannot be longer than 256 characters."
-
-        if "type" not in field:
-            return f"Field #{i} needs a type."
 
         if field["type"] == "text":
             if "default" not in field:
@@ -145,6 +160,9 @@ def validate_answer(schema: list[Field], form: dict[str, str]) -> str:
     """Validates an answer against the given schema. Returns an error string on failure."""
 
     for i, field in enumerate(schema):
+        if isinstance(field, InfoField):
+            continue
+
         if not isinstance(field, ChoiceField) or field.single:
             if f"col{i}" not in form:
                 return f"Question #{i + 1} is missing an answer."
@@ -193,7 +211,7 @@ def validate_answer(schema: list[Field], form: dict[str, str]) -> str:
 def decode_fields(data: list[dict[str, JSONData]]) -> list[Field]:
     fields: list[Field] = []
     for elem in data:
-        assert isinstance(elem["name"], str)
+        assert isinstance(elem["type"], str)
 
         if elem["type"] == "text":
             del elem["type"]
@@ -228,6 +246,11 @@ def decode_fields(data: list[dict[str, JSONData]]) -> list[Field]:
                 )
             )
             elem["type"] = "range"
+        elif elem["type"] == "info":
+            assert isinstance(elem["text"], str)
+
+            fields.append(InfoField(text=elem["text"]))
+
     return fields
 
 
@@ -240,6 +263,9 @@ def create_model(name: str, fields: list[Field]) -> Type[Model]:
 
     cols = {"id": db.Column(db.Integer, primary_key=True)}
     for i, field in enumerate(fields):
+        if isinstance(field, InfoField):
+            continue
+
         if isinstance(field, TextField):
             col = db.Column(db.Text, default=field.default)
         elif isinstance(field, ChoiceField):
@@ -390,6 +416,9 @@ def view_results(form_id: int) -> ResponseReturnValue:
     for res in model.query.all():
         cols = [res.id]
         for i, field in enumerate(fields):
+            if isinstance(field, InfoField):
+                continue
+
             if not isinstance(field, ChoiceField):
                 cols.append(getattr(res, f"col{i}"))
             else:

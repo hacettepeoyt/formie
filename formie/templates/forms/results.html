@@ -5,7 +5,9 @@
     <tr>
         <th>ID</th>
 {% for question in schema %}
+    {% if question["name"] %}
         <th>{{ question["name"] }}</th>
+    {% endif %}
 {% endfor %}
     </tr>
 {% for result in results %}
