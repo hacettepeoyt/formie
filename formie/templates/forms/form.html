@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="POST">
+<form method="POST" class="user-form">
 {% for index, field in schema %}
     <div class="question-outer">
-    <div class="question-inner">
-    {{ field['name'] }}<br>
+    <fieldset class="question-inner">
+    {% if 'name' in field %}
+        <legend>{{ field['name'] }}</legend>
+    {% endif %}
+
     {% if field['type'] == 'text' %}
         <input type="text" name="col{{ index }}" value="{{ field['default'] }}"/>
     {% elif field['type'] == 'choice' %}
