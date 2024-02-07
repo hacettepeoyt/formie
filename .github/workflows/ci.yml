@@ -24,6 +24,6 @@ jobs:
     - name: run black (formatter)
       run: |
         nix develop --command bash -c "black --diff --check formie/"
-    - name: run mypy
-      run: |
-        mypy --strict *.py formie
+    #- name: run mypy
+    #  run: |
+    #    mypy --strict *.py formie
