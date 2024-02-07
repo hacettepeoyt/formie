@@ -24,7 +24,16 @@ else:
     ResponseReturnValue = "ResponseReturnValue"
 
 from formie import auth
-from formie.models import db, Field, ChoiceField, Form, InfoField, Model, TextField, RangeField
+from formie.models import (
+    db,
+    Field,
+    ChoiceField,
+    Form,
+    InfoField,
+    Model,
+    TextField,
+    RangeField,
+)
 
 bp = Blueprint("forms", __name__, url_prefix="/forms")
 

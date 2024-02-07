@@ -60,7 +60,7 @@ class Field:
 
 @dataclass
 class InfoField:
-    text: str # max 512 characters
+    text: str  # max 512 characters
 
 
 @dataclass
