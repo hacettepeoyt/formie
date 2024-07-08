@@ -2,7 +2,7 @@
 
 run: .venv .formie-secret-key formie.db
 	. .venv/bin/activate && \
-	SECRET_KEY="$$(cat .formie-secret-key)" SQLALCHEMY_DATABASE_URI="sqlite:///$(PWD)/formie.db" FLASK_APP="formie" FLASK_DEBUG=1 python -m flask run
+	SECRET_KEY="$$(cat .formie-secret-key)" SQLALCHEMY_DATABASE_URI="sqlite:///$(PWD)/formie.db" FLASK_APP="formie" FLASK_DEBUG=1 cargo run
 
 clean:
 	rm -rf .venv .formie-secret-key formie.db

@@ -1,0 +1,9 @@
+[package]
+name = "formie"
+version = "1.3.2"
+edition = "2021"
+
+[dependencies]
+libc = "0.2.155"
+reqwest = { version = "0.12.5", features = [ "stream" ], default-features = false }
+rocket = "0.5.1"
