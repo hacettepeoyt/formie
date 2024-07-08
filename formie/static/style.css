@@ -101,12 +101,20 @@ p {
     white-space: pre-wrap;
 }
 
+.user-form textarea {
+    height: 10em;
+}
+
 @media screen and (max-width: 800px) {
     .user-form input[type="text"] {
         width: 95%;
     }
 
     .user-form input[type="number"] {
+        width: 95%;
+    }
+
+    .user-form textarea {
         width: 95%;
     }
 
@@ -122,6 +130,10 @@ p {
     }
 
     .user-form input[type="number"] {
+        width: 99%;
+    }
+
+    .user-form textarea {
         width: 99%;
     }
 

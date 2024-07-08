@@ -105,8 +105,15 @@ def validate_schema(data: JSONData) -> str:
             if len(field["default"]) > 1023:
                 return f"Field #{i}'s default cannot be longer than 1023 characters."
 
-            if len(field) != 3:
-                return f"Field #{i} cannot have more than 3 attributes."
+            if "multiline" in field:
+                if not isinstance(field["multiline"], bool):
+                    return f"Field #{i} has invalid multline attribute"
+
+                if len(field) != 4:
+                    return f"Field #{i} cannot have more than 4 attributes."
+            else:
+                if len(field) != 3:
+                    return f"Field #{i} cannot have more than 3 attributes."
         elif field["type"] == "choice":
             if "default" not in field:
                 return f"Field #{i} needs a default attribute."
@@ -227,7 +234,7 @@ def decode_fields(data: list[dict[str, JSONData]]) -> list[Field]:
 
             assert isinstance(elem["default"], str)
 
-            fields.append(TextField(name=elem["name"], default=elem["default"]))
+            fields.append(TextField(name=elem["name"], default=elem["default"], multiline=elem.get("multiline", False)))
 
             elem["type"] = "text"
         elif elem["type"] == "choice":

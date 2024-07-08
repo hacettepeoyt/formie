@@ -66,6 +66,7 @@ class InfoField:
 @dataclass
 class TextField(Field):
     default: str  # max 1023 bytes
+    multiline: bool
 
 
 @dataclass

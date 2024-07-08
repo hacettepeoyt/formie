@@ -10,7 +10,11 @@
     {% endif %}
 
     {% if field['type'] == 'text' %}
-        <input type="text" name="col{{ index }}" value="{{ field['default'] }}"/>
+        {% if field['multiline'] %}
+            <textarea name="col{{index}}">{{ field['default'] }}</textarea>
+        {% else %}
+            <input type="text" name="col{{ index }}" value="{{ field['default'] }}"/>
+        {% endif %}
     {% elif field['type'] == 'choice' %}
         {% if field['single'] %}
             {% for choice_index, choice in field['choices'] %}

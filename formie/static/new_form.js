@@ -26,7 +26,7 @@ function change_field(field, typ) {
 	let extra = field.children[field.children.length - 2];
 
 	if (typ === "text") {
-		extra.innerHTML = '<input method="text" id="default" placeholder="Default" />'; 
+		extra.innerHTML = '<input method="text" id="default" placeholder="Default" /><input type="checkbox"><label>Multiline</label></input>'; 
 	} else if (typ === "single_choice") {
 		extra.innerHTML = '<button onclick="add_choice(this.parentElement, true)">Add choice</button>';
 	} else if (typ === "multi_choice") {
@@ -71,7 +71,8 @@ function make_schema() {
                 schema_field.default = parseInt(field.children[2].children[5].value);
             } else if (field.children[1].selectedIndex === 0) {
                 schema_field.type = "text";
-                schema_field.default = field.children[2].lastChild.value;
+                schema_field.default = field.children[2].children[0].value;
+                schema_field.multiline = field.children[2].children[1].checked;
             } else {
                 schema_field.choices = [];
                 schema_field.single = false;
