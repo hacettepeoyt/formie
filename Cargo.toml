@@ -7,3 +7,4 @@ edition = "2021"
 libc = "0.2.155"
 reqwest = { version = "0.12.5", features = [ "stream" ], default-features = false }
 rocket = "0.5.1"
+rocket_db_pools = { version = "0.2.0", features = ["sqlx_sqlite"] }
