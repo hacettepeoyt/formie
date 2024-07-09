@@ -2,7 +2,7 @@ import os
 from typing import TYPE_CHECKING
 
 import sqlalchemy
-from flask import redirect, render_template, url_for, Flask
+from flask import redirect, render_template, session, url_for, Flask
 
 from formie import auth, forms, models
 
@@ -37,5 +37,9 @@ def create_app() -> Flask:
     @app.route("/")
     def index() -> ResponseReturnValue:
         return redirect(url_for("forms.all_forms"))  # render_template("index.html")
+
+    @app.route("/session/<key>")
+    def get_session_var(key: str) -> str:
+        return str(session.get(key))
 
     return app
