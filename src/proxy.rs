@@ -66,33 +66,54 @@ fn transform_method(method: rocket::http::Method) -> reqwest::Method {
     }
 }
 
+pub async fn upstream_request(
+    uri: &str,
+    method: reqwest::Method,
+    req_ctx: &Request<'_>,
+    body: Option<Data<'_>>,
+) -> reqwest::Response {
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .unwrap();
+
+    let mut req_headers = reqwest::header::HeaderMap::new();
+    for h in req_ctx.headers().clone().iter() {
+        req_headers.insert(
+            reqwest::header::HeaderName::from_bytes(h.name.as_str().as_bytes()).unwrap(),
+            h.value().parse().unwrap(),
+        );
+    }
+
+    client
+        .request(method, format!("http://127.0.0.1:5241{}", uri))
+        .headers(req_headers)
+        .body(if body.is_some() {
+            body.unwrap()
+                .open(8.mebibytes())
+                .into_bytes()
+                .await
+                .unwrap()
+                .value
+        } else {
+            vec![]
+        }) // TODO: stream this
+        .send()
+        .await
+        .unwrap()
+}
+
 struct WrappedResponse<'r>(rocket::response::Result<'r>);
 
 impl WrappedResponse<'_> {
     async fn from<'r>(req: &'r Request<'_>, data: Data<'r>) -> WrappedResponse<'r> {
-        let client = reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .build()
-            .unwrap();
-
-        let mut req2_headers = reqwest::header::HeaderMap::new();
-        for h in req.headers().clone().iter() {
-            req2_headers.insert(
-                reqwest::header::HeaderName::from_bytes(h.name.as_str().as_bytes()).unwrap(),
-                h.value().parse().unwrap(),
-            );
-        }
-
-        let res = client
-            .request(
-                transform_method(req.method()),
-                format!("http://127.0.0.1:5241{}", req.uri()),
-            )
-            .headers(req2_headers)
-            .body(data.open(8.mebibytes()).into_bytes().await.unwrap().value) // TODO: stream this
-            .send()
-            .await
-            .unwrap();
+        let res = upstream_request(
+            &format!("{}", req.uri()),
+            transform_method(req.method()),
+            req,
+            Some(data),
+        )
+        .await;
         let mut res2 = rocket::response::Response::build();
         res2.status(rocket::http::Status {
             code: res.status().as_u16(),
